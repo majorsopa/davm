@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "davm_common",
+    "compiler",
+    "runtime",
+]
