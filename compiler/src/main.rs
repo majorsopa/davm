@@ -5,11 +5,12 @@ fn main() {
     let data = "
     prgmconst
         def foobar 3 `abc`
-        def num 4 12
+        def num 4 511
+        def addr 4 0
     prgmmain
     ~
         mov b num
-        mov a b"
+        mov addr b"
         .to_string();
     let compiled = compile(data);
     match std::fs::write(output_file, compiled) {

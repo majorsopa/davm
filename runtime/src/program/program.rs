@@ -62,10 +62,11 @@ impl Program<'_> {
         } else {
             let address: u32 = literal_to_int(fragment_to_literal(location).unwrap()).unwrap();
             {
-                self.memory[address as usize] = (!(value & 0xF000) >> 24) as u8;
-                self.memory[(address + 8) as usize] = (!(value & 0x0F00) >> 16) as u8;
-                self.memory[(address + 16) as usize] = (!(value & 0x00F0) >> 8) as u8;
-                self.memory[(address + 24) as usize] = (!(value & 0x000F)) as u8;
+                let value = value.to_be_bytes();
+                self.memory[(address + 0) as usize] = value[0];
+                self.memory[(address + 1) as usize] = value[1];
+                self.memory[(address + 2) as usize] = value[2];
+                self.memory[(address + 3) as usize] = value[3];
             }
         }
     }
@@ -145,6 +146,7 @@ impl std::fmt::Debug for Program<'_> {
         f.debug_struct("Program")
             .field("labels", &self.labels)
             //.field("memory", &self.memory)
+            .field("memory[0..16]", &&self.memory[0..16])
             .field("registers", &self.registers)
             .finish_non_exhaustive()
     }
