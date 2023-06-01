@@ -1,6 +1,6 @@
 use super::*;
 
-pub const ARG_AMOUNTS: [u8; 3] = [
+pub const ARG_AMOUNTS: [u32; 3] = [
     0x1, // push
     0x1, // pop
     0x2, // mov
@@ -14,9 +14,10 @@ pub enum ProgramInstruction {
 }
 
 impl ProgramSerialize for ProgramInstruction {
-    fn add_bytes(self, buf: &mut Vec<u8>) {
-        buf.push(self as u8);
-        buf.push(ARG_AMOUNTS[self as usize]);
+    fn add_bytes(self, buf: &mut ProgramBytes) {
+        buf.1.push(self as u8);
+        buf.1
+            .extend_from_slice(ARG_AMOUNTS[self as usize].to_be_bytes().as_slice());
     }
 }
 
@@ -27,7 +28,7 @@ impl ProgramDeserialize for ProgramInstruction {
             0x0 => Self::PUSH,
             0x1 => Self::POP,
             0x2 => Self::MOV,
-            _ => panic!("invalid instruction"),
+            _x => panic!("invalid instruction {_x}"),
         }
     }
 }

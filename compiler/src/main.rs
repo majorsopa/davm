@@ -5,8 +5,9 @@ fn main() {
     let data = "
     prgmconst
         def foobar 3 `abc`
-        def num 1 7
+        def num 4 12
     prgmmain
+    ~
         mov b num
         mov a b"
         .to_string();

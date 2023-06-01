@@ -10,6 +10,7 @@ fn main() {
         Ok(b) => b,
         Err(e) => panic!("{} - error reading input file `{}`", e, input_file),
     };
+    println!("{:#?}", buf);
     let buf = &mut buf.iter();
     let mut program = Program::parse_from_bytes(buf, MEMORY_SIZE).reverse();
 

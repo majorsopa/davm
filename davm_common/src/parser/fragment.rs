@@ -3,21 +3,29 @@ use super::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProgramFragment<'a> {
     Literal(ProgramLiteral),
-    Length(u8),
+    Length(u32),
     Instruction(ProgramInstruction),
     Register(ProgramRegister),
     Section(ProgramSection),
     Definition(ProgramDefinition<'a>),
     PotentialIdentifier(&'a str),
+    Label(()),
 }
 
 impl<'a> ProgramSerialize for ProgramFragment<'a> {
-    fn add_bytes(self, buf: &mut Vec<u8>) {
+    fn add_bytes(self, buf: &mut ProgramBytes) {
         match self {
             Self::Literal(x) => x.add_bytes(buf),
-            Self::Length(x) => buf.push(x),
+            Self::Length(x) => {
+                let int_lit = ProgramLiteral::IntLiteral(x);
+                int_lit.add_bytes(buf);
+            },
             Self::Instruction(x) => x.add_bytes(buf),
             Self::Register(x) => x.add_bytes(buf),
+            Self::Label(_) => {
+                let x: u32 = buf.1.len() as u32;
+                buf.0.push(x);  // labels are lengths in bytes aka addresses
+            }
             _ => {
                 panic!(
                     "unexpected parsing error, bad fragment {:?} found in supposedly cleaned buffer. make sure all the static and const definitions are in the correct section",
@@ -40,6 +48,7 @@ where
             map(parse_register, ProgramFragment::Register),
             map(parse_section, ProgramFragment::Section),
             map(parse_definition, ProgramFragment::Definition),
+            map(parse_label, ProgramFragment::Label),
             map(alpha1, ProgramFragment::PotentialIdentifier), // last for a reason!
         )),
         alt((multispace0, eof)),

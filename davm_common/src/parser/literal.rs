@@ -3,21 +3,21 @@ use super::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProgramLiteral {
     //FloatLiteral(f32),
-    IntLiteral(u8),
+    IntLiteral(u32),
     StringLiteral(String),
 }
 
 impl ProgramSerialize for ProgramLiteral {
-    fn add_bytes(self, buf: &mut Vec<u8>) {
-        buf.push(0x1);
+    fn add_bytes(self, buf: &mut ProgramBytes) {
+        buf.1.push(0x1);
         match self {
             Self::IntLiteral(x) => {
-                buf.push(0x0);
-                buf.extend_from_slice(x.to_be_bytes().as_slice());
+                buf.1.push(0x0);
+                buf.1.extend_from_slice(x.to_be_bytes().as_slice());
             }
             Self::StringLiteral(x) => {
-                buf.push(0x1);
-                buf.extend_from_slice(x.as_bytes());
+                buf.1.push(0x1);
+                buf.1.extend_from_slice(x.as_bytes());
             }
         }
     }
@@ -26,20 +26,14 @@ impl ProgramSerialize for ProgramLiteral {
 impl ProgramDeserialize for ProgramLiteral {
     fn from_bytes(buf: &mut Iter<u8>, i: &mut usize) -> Self {
         *i += 1;
-        let nxt = *buf.next().unwrap();
-        match nxt {
-            0x0 => {
-                *i += 1;
-                if *buf.next().unwrap() != 0x1 {
-                    panic!("currently only u8 int literals are supported");
-                }
-                *i += 1;
-                ProgramLiteral::IntLiteral(*buf.next().unwrap())
-            }
+        match *buf.next().unwrap() {
+            0x0 => match next_u32!(buf, i) {
+                4 => ProgramLiteral::IntLiteral(next_u32!(buf, i)),
+                _x => panic!("only u32 supported currently, given length was {_x}"),
+            },
             0x1 => {
                 let mut string_maker = String::new();
-                *i += 1;
-                let len = *buf.next().unwrap();
+                let len = next_u32!(buf, i);
                 for _ in 0..len {
                     *i += 1;
                     string_maker.push((*buf.next().unwrap()) as char);
@@ -61,12 +55,12 @@ where
     ))(input)
 }
 
-fn parse_num<'a, E>(i: &'a str) -> IResult<&'a str, u8, E>
+fn parse_num<'a, E>(i: &'a str) -> IResult<&'a str, u32, E>
 where
     E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
 {
     alt((
-        map_res(digit1, |digit_str: &str| digit_str.parse::<u8>()),
+        map_res(digit1, |digit_str: &str| digit_str.parse::<u32>()),
         map(preceded(tag("-"), digit1), |_digit_str: &str| {
             panic!("no negative numbers yet");
             //-_digit_str.parse::<u8>().unwrap()

@@ -12,9 +12,9 @@ pub enum ProgramRegister {
 }
 
 impl ProgramSerialize for ProgramRegister {
-    fn add_bytes(self, buf: &mut Vec<u8>) {
-        buf.push(0x0);
-        buf.push(self as u8);
+    fn add_bytes(self, buf: &mut ProgramBytes) {
+        buf.1.push(0x0);
+        buf.1.push(self as u8);
     }
 }
 
@@ -28,8 +28,8 @@ impl ProgramDeserialize for ProgramRegister {
             0x3 => Self::D,
             0x4 => Self::STACK_START,
             0x5 => Self::STACK_LENGTH,
-            _ => panic!(
-                "what is this register bruh, make sure you are on the right version of runtime"
+            _x => panic!(
+                "register `{_x}` invalid"
             ),
         }
     }
