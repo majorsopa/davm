@@ -8,6 +8,7 @@ pub enum ProgramRegister {
     C,
     D,
     STACK_LENGTH,
+    FLAGS0,
 }
 
 impl ProgramSerialize for ProgramRegister {
@@ -26,9 +27,7 @@ impl ProgramDeserialize for ProgramRegister {
             0x2 => Self::C,
             0x3 => Self::D,
             0x4 => Self::STACK_LENGTH,
-            _x => panic!(
-                "register `{_x}` invalid"
-            ),
+            _x => panic!("register `{_x}` invalid"),
         }
     }
 }
@@ -44,6 +43,7 @@ pub fn parse_register<'a, E: ParseError<&'a str>>(
         ProgramRegister::STACK_LENGTH,
         terminated(tag("sl"), multispace1),
     );
+    let parse_fl0 = value(ProgramRegister::FLAGS0, terminated(tag("fl0"), multispace1));
 
     alt((
         parse_a,
@@ -51,5 +51,6 @@ pub fn parse_register<'a, E: ParseError<&'a str>>(
         parse_c,
         parse_d,
         parse_stack_length,
+        parse_fl0,
     ))(input)
 }

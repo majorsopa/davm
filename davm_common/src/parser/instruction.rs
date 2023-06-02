@@ -4,7 +4,7 @@ pub const ARG_AMOUNTS: [u32; 4] = [
     0x1, // push
     0x1, // pop
     0x2, // mov
-    0x2, // load
+    0x3, // load
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,6 +30,7 @@ impl ProgramDeserialize for ProgramInstruction {
             0x0 => Self::PUSH,
             0x1 => Self::POP,
             0x2 => Self::MOV,
+            0x3 => Self::LOAD,
             _x => panic!("invalid instruction {_x}"),
         }
     }

@@ -8,10 +8,11 @@ fn main() {
         def num 4 511
         def addr 4 0
         def foo 4 6
+        def uisize 4 4
     prgmmain
     ~
-        push num
-        pop a"
+        mov foo num
+        load d uisize foo"
         .to_string();
     let compiled = compile(data);
     match std::fs::write(output_file, compiled) {

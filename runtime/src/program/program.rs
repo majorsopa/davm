@@ -24,6 +24,23 @@ macro_rules! get_value {
     }};
 }
 
+macro_rules! get_bytes_from_memory {
+    ($program:ident, $addr:ident, $length:ident) => {{
+        let length: u32 = literal_to_int(fragment_to_literal($length).unwrap()).unwrap();
+        let addr: u32 = literal_to_int(fragment_to_literal($addr).unwrap()).unwrap();
+
+        let mut bytes = [0u8; 4];
+        for i in 0..length {
+            *bytes
+                .get_mut(i as usize)
+                .expect("max of 4 bytes per load supported currently") =
+                $program.memory[(addr + i) as usize];
+        }
+
+        u32::from_be_bytes(bytes)
+    }};
+}
+
 macro_rules! write_u32_to_memory {
     ($program:ident, $address:ident, $value:ident) => {{
         let value = $value.to_be_bytes();
@@ -39,7 +56,7 @@ pub struct Program<'a> {
     labels: Vec<u32>,
     memory: Vec<u8>,
     stack: Vec<u32>,
-    registers: [u32; 5],
+    registers: [u32; 6],
 }
 
 impl Program<'_> {
@@ -60,6 +77,7 @@ impl Program<'_> {
             ProgramInstruction::PUSH => self.run_push(&mut set),
             ProgramInstruction::POP => self.run_pop(&mut set),
             ProgramInstruction::MOV => self.run_mov(&mut set),
+            ProgramInstruction::LOAD => self.run_load(&mut set),
             _ => panic!("unimplemented instruction `{:?}`", instruction),
         };
     }
@@ -95,12 +113,30 @@ impl Program<'_> {
         let (location, value) = (args.pop().unwrap(), args.pop().unwrap());
         let value = get_value!(self, value);
 
+        // duplicated code !
         if let Some(register_location) = fragment_to_register(location.clone()) {
             let location_register_index: u8 = register_location as u8;
             self.registers[location_register_index as usize] = value;
         } else {
             let address: u32 = literal_to_int(fragment_to_literal(location).unwrap()).unwrap();
             write_u32_to_memory!(self, address, value);
+        }
+    }
+
+    fn run_load(&mut self, args: &mut ProgramVec) {
+        let (location, length, addr) = (
+            args.pop().unwrap(),
+            args.pop().unwrap(),
+            args.pop().unwrap(),
+        );
+        let value = get_bytes_from_memory!(self, addr, length);
+
+        // duplicated code !
+        if let Some(register_location) = fragment_to_register(location) {
+            let location_register_index: u8 = register_location as u8;
+            self.registers[location_register_index as usize] = value;
+        } else {
+            panic!("currently only loading into registers is supported");
         }
     }
 
@@ -168,7 +204,7 @@ impl Program<'_> {
             labels,
             stack: vec![],
             memory: vec![0u8; memory_size],
-            registers: [0; 5],
+            registers: [0; 6],
         }
         .reverse()
     }
