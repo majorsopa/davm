@@ -12,7 +12,7 @@ fn main() {
     };
     //println!("{:#?}", buf);
     let buf = &mut buf.iter();
-    let mut program = Program::parse_from_bytes(buf, MEMORY_SIZE).reverse();
+    let mut program = Program::parse_from_bytes(buf, MEMORY_SIZE);
 
     //println!("{:#?}", program);
 

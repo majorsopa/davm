@@ -7,10 +7,11 @@ fn main() {
         def foobar 3 `abc`
         def num 4 511
         def addr 4 0
+        def foo 4 6
     prgmmain
     ~
-        mov b num
-        mov addr b"
+        push num
+        pop a"
         .to_string();
     let compiled = compile(data);
     match std::fs::write(output_file, compiled) {

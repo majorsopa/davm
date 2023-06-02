@@ -1,9 +1,10 @@
 use super::*;
 
-pub const ARG_AMOUNTS: [u32; 3] = [
+pub const ARG_AMOUNTS: [u32; 4] = [
     0x1, // push
     0x1, // pop
     0x2, // mov
+    0x2, // load
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -11,6 +12,7 @@ pub enum ProgramInstruction {
     PUSH,
     POP,
     MOV,
+    LOAD,
 }
 
 impl ProgramSerialize for ProgramInstruction {
@@ -39,6 +41,7 @@ pub fn parse_instruction<'a, E: ParseError<&'a str> + std::fmt::Debug>(
     let parse_push = value(ProgramInstruction::PUSH, tag("push"));
     let parse_pop = value(ProgramInstruction::POP, tag("pop"));
     let parse_mov = value(ProgramInstruction::MOV, tag("mov"));
+    let parse_load = value(ProgramInstruction::LOAD, tag("load"));
 
-    alt((parse_push, parse_pop, parse_mov))(input)
+    alt((parse_push, parse_pop, parse_mov, parse_load))(input)
 }
