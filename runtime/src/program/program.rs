@@ -30,11 +30,13 @@ macro_rules! get_bytes_from_memory {
         let addr: u32 = literal_to_int(fragment_to_literal($addr).unwrap()).unwrap();
 
         let mut bytes = [0u8; 4];
-        for i in 0..length {
+        let mut indice_i: usize = 4;
+        for i in ((addr)..(addr + length)).rev() {
+            indice_i -= 1;
             *bytes
-                .get_mut(i as usize)
+                .get_mut(indice_i)
                 .expect("max of 4 bytes per load supported currently") =
-                $program.memory[(addr + i) as usize];
+                $program.memory[i as usize];
         }
 
         u32::from_be_bytes(bytes)

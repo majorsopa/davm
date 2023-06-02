@@ -5,14 +5,19 @@ fn main() {
     let data = "
     prgmconst
         def foobar 3 `abc`
-        def num 4 511
+        def num 4 12
         def addr 4 0
+        def oaddr 4 4
         def foo 4 6
         def uisize 4 4
+        def bsize 4 1
     prgmmain
     ~
-        mov foo num
-        load d uisize foo"
+        mov addr num
+        load d uisize addr
+        
+        mov oaddr num
+        load a bsize 4 7"
         .to_string();
     let compiled = compile(data);
     match std::fs::write(output_file, compiled) {
