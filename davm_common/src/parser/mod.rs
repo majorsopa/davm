@@ -8,11 +8,13 @@ mod section;
 
 pub use nom::branch::alt;
 pub use nom::bytes::complete::{is_not, tag, take_till};
-pub use nom::character::complete::{alphanumeric1, digit1, multispace0, multispace1};
+pub use nom::character::complete::{
+    alphanumeric0, alphanumeric1, digit1, multispace0, multispace1,
+};
 pub use nom::character::streaming::{alpha1, char};
 pub use nom::combinator::{complete, eof, map, map_res, value, verify};
 pub use nom::error::{FromExternalError, ParseError};
-pub use nom::sequence::{delimited, preceded, terminated};
+pub use nom::sequence::{delimited, pair, preceded, terminated};
 pub use nom::IResult;
 pub use std::slice::Iter;
 
@@ -22,7 +24,7 @@ pub use fragment::*;
 pub use instruction::*;
 pub use label::*;
 pub use literal::*;
-pub use nom::multi::fold_many0;
+pub use nom::multi::{fold_many0, fold_many1};
 pub use register::*;
 pub use section::*;
 

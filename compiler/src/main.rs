@@ -4,21 +4,20 @@ fn main() {
     let output_file = "out.davm";
     let data = "
     prgmconst
-        def foobar 3 `abc`
         def num 4 12
         def addr 4 0
-        def oaddr 4 4
-        def foo 4 6
-        def uisize 4 4
-        def bsize 4 1
+        def u32size 4 4
+        def end 4 1
     prgmmain
     ~
-        mov addr num
-        load d uisize addr
-        
-        mov oaddr num
-        load a bsize 4 7"
-        .to_string();
+        mov addr end
+        load a u32size addr
+        jmp a
+        mov u32size u32size
+    ~
+        mov 4 8 4 36
+    "
+    .to_string();
     let compiled = compile(data);
     match std::fs::write(output_file, compiled) {
         Ok(_) => println!("wrote output to {}", output_file),

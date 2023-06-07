@@ -1,10 +1,10 @@
 use crate::parser::{ProgramBytes, ProgramFragment, ProgramLiteral, ProgramSerialize};
 use std::collections::HashMap;
-pub type ProgramVec<'a> = Vec<ProgramFragment<'a>>;
+pub type ProgramVec = Vec<ProgramFragment>;
 
 #[derive(Debug)]
-pub struct ProgramParts<'a> {
-    instruction_parts: ProgramVec<'a>,
+pub struct ProgramParts {
+    instruction_parts: ProgramVec,
 }
 
 macro_rules! make_bufferable {
@@ -18,14 +18,14 @@ macro_rules! make_bufferable {
     }};
 }
 
-impl<'a> ProgramParts<'a> {
-    pub fn new(make_from: ProgramVec<'a>) -> Self {
+impl ProgramParts {
+    pub fn new(make_from: ProgramVec) -> Self {
         use crate::parser::ProgramSection;
 
         let mut instruction_parts = Vec::new();
         let mut const_parts = Vec::new();
         let mut is_instruction: Option<ProgramSection> = None;
-        let mut const_names: HashMap<&str, (ProgramFragment, ProgramFragment)> = HashMap::new();
+        let mut const_names: HashMap<String, (ProgramFragment, ProgramFragment)> = HashMap::new();
 
         let mut make_from = make_from.into_iter().peekable();
         while make_from.peek().is_some() {
@@ -36,7 +36,7 @@ impl<'a> ProgramParts<'a> {
                     match is_instruction.expect(&format!("unexpected fragment `{:#?}`", fragment)) {
                         ProgramSection::PRGMMAIN => match fragment {
                             ProgramFragment::PotentialIdentifier(pid) => {
-                                if let Some(pid) = const_names.get(pid) {
+                                if let Some(pid) = const_names.get(&pid) {
                                     let pid = pid.clone();
                                     instruction_parts.push(pid.0);
                                     instruction_parts.push(pid.1);
@@ -51,7 +51,7 @@ impl<'a> ProgramParts<'a> {
                                 let def = def.get_name();
                                 if const_names
                                     .insert(
-                                        def,
+                                        def.clone(),
                                         (make_from.next().unwrap(), make_from.next().unwrap()),
                                     )
                                     .is_some()
@@ -70,7 +70,7 @@ impl<'a> ProgramParts<'a> {
     }
 }
 
-impl<'a> ProgramSerialize for ProgramParts<'a> {
+impl ProgramSerialize for ProgramParts {
     fn add_bytes(self, buf: &mut ProgramBytes) {
         let mut prev_literal_val: Option<u32> = None;
         for fragment in self.instruction_parts {

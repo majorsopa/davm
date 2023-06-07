@@ -1,14 +1,14 @@
 use super::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ProgramDefinition<'a> {
-    DEF(&'a str),
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ProgramDefinition {
+    Def(String),
 }
 
-impl<'a> ProgramDefinition<'a> {
-    pub fn get_name(&self) -> &'a str {
+impl ProgramDefinition {
+    pub fn get_name(&self) -> &String {
         match self {
-            Self::DEF(name) => name,
+            Self::Def(name) => name,
         }
     }
 }
@@ -18,7 +18,22 @@ where
     E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError> + std::fmt::Debug,
 {
     alt((map(
-        preceded(terminated(tag("def"), multispace1), alpha1),
-        ProgramDefinition::DEF,
+        preceded(terminated(tag("def"), multispace1), parse_identifier),
+        ProgramDefinition::Def,
     ),))(input)
+}
+
+pub fn parse_identifier<'a, E>(input: &'a str) -> IResult<&'a str, String, E>
+where
+    E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError> + std::fmt::Debug,
+{
+    fold_many1(
+        pair(alpha1, alphanumeric0),
+        String::new,
+        |mut string, fragment| {
+            string += fragment.0;
+            string += fragment.1;
+            string
+        },
+    )(input)
 }

@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 davm_common = { path = "../davm_common" }
 nom = "7.1.3"
+nohash-hasher = "0.2.0"

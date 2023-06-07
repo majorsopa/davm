@@ -5,7 +5,8 @@ use davm_common::{
     },
     ProgramVec, ARG_AMOUNTS,
 };
-use std::slice::Iter;
+use nohash_hasher::NoHashHasher;
+use std::{collections::HashMap, hash::BuildHasherDefault, slice::Iter};
 
 macro_rules! get_value {
     ($program:ident, $value:ident) => {{
@@ -53,35 +54,47 @@ macro_rules! write_u32_to_memory {
     }};
 }
 
-pub struct Program<'a> {
-    data: Vec<ProgramVec<'a>>,
-    labels: Vec<u32>,
+pub struct Program {
+    data: Vec<ProgramVec>,
+    // could be a cursor, probably
+    labels: HashMap<u32, u32, BuildHasherDefault<NoHashHasher<u32>>>,
+    pc: u32,
     memory: Vec<u8>,
     stack: Vec<u32>,
     registers: [u32; 6],
 }
 
-impl Program<'_> {
+impl Program {
     pub fn run(&mut self) {
-        for _ in 0..self.data.len() {
-            self.run_instruction_set()
+        while self.pc < self.data.len() as u32 {
+            self.run_instruction_set();
         }
     }
 
     fn run_instruction_set(&mut self) {
-        let mut set: ProgramVec = self.data.pop().unwrap();
+        let mut set: ProgramVec = self.data[self.pc as usize].clone();
         let instruction: ProgramInstruction =
             fragment_to_instruction(set.pop().unwrap()).expect("not an instruction");
         let arg_amounts = ARG_AMOUNTS[instruction as usize];
         assert_eq!(set.len(), arg_amounts as usize);
+
+        let mut inc_pc_counter = true;
 
         match instruction {
             ProgramInstruction::PUSH => self.run_push(&mut set),
             ProgramInstruction::POP => self.run_pop(&mut set),
             ProgramInstruction::MOV => self.run_mov(&mut set),
             ProgramInstruction::LOAD => self.run_load(&mut set),
+            ProgramInstruction::JMP => {
+                self.run_jmp(&mut set);
+                inc_pc_counter = false;
+            }
             _ => panic!("unimplemented instruction `{:?}`", instruction),
         };
+
+        if inc_pc_counter {
+            self.pc += 1;
+        }
     }
 
     fn run_push(&mut self, args: &mut ProgramVec) {
@@ -142,8 +155,12 @@ impl Program<'_> {
         }
     }
 
+    fn run_jmp(&mut self, args: &mut ProgramVec) {
+        let value = args.pop().unwrap();
+        self.pc = *self.labels.get(&get_value!(self, value)).unwrap();
+    }
+
     fn reverse(mut self) -> Self {
-        self.data.reverse();
         self.data = self
             .data
             .into_iter()
@@ -151,7 +168,7 @@ impl Program<'_> {
                 v.reverse();
                 v
             })
-            .collect::<Vec<ProgramVec<'_>>>();
+            .collect::<Vec<ProgramVec>>();
         self
     }
 
@@ -159,9 +176,9 @@ impl Program<'_> {
         let i = &mut 0;
         let buf_len = buf.len();
 
-        let mut labels: Vec<u32> = Vec::new();
+        let mut labels = Vec::new();
         loop {
-            let label: u32 = next_u32!(buf, i);
+            let label = next_u32!(buf, i);
             if label == 0xABBAu32 {
                 break;
             } else {
@@ -203,7 +220,16 @@ impl Program<'_> {
 
         Program {
             data,
-            labels,
+            labels: {
+                let mut m = HashMap::with_hasher(BuildHasherDefault::default());
+                let mut i = 0;
+                for l in labels {
+                    m.insert(i, l);
+                    i += 1;
+                }
+                m
+            },
+            pc: 0,
             stack: vec![],
             memory: vec![0u8; memory_size],
             registers: [0; 6],
@@ -212,7 +238,7 @@ impl Program<'_> {
     }
 }
 
-impl std::fmt::Debug for Program<'_> {
+impl std::fmt::Debug for Program {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Program")
             .field("stack", &self.stack)
