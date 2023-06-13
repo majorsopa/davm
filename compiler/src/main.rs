@@ -4,18 +4,24 @@ fn main() {
     let output_file = "out.davm";
     let data = "
     prgmconst
-        def num 4 12
-        def addr 4 0
-        def u32size 4 4
-        def end 4 1
+        def zero 4 0
+        def firstword 4 0
+        def word 4 4
+        def twelve 4 12
     prgmmain
     ~
-        mov addr end
-        load a u32size addr
-        jmp a
-        mov u32size u32size
+        mov a zero
+        mov b zero
+        jmp 4 2
     ~
-        mov 4 8 4 36
+        inc b
+        ret
+    ~
+        inc a
+        call 4 1
+        inc d
+        inc c
+        inc a
     "
     .to_string();
     let compiled = compile(data);

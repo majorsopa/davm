@@ -29,7 +29,7 @@ impl ProgramDeserialize for ProgramLiteral {
         match *buf.next().unwrap() {
             0x0 => match next_u32!(buf, i) {
                 4 => ProgramLiteral::IntLiteral(next_u32!(buf, i)),
-                _x => panic!("only u32 supported currently, given length was {_x}"),
+                _x => panic!("only u32 supported currently, given length must be 4"),
             },
             0x1 => {
                 let mut string_maker = String::new();
